@@ -9,12 +9,9 @@ class Emacs < Formula
   revision 2
 
   bottle do
-    sha256 arm64_tahoe:   "1e9d72a5821b09957ad3cfc98b91239bd68b905d74edc129537ae97819a49c04"
-    sha256 arm64_sequoia: "d9b7aaf2b753d0e741549390f1996e3283edd8ffea377ee9450ad324b66a239e"
-    sha256 arm64_sonoma:  "d9d52a9f142dbfc902e9b9edbc36d0175f999d0ccfdf8c4c55596b6f43cb2183"
-    sha256 sonoma:        "c0c85e628128ff1d50d811d486a57d67aa28148730304bdbbd3a91f685935104"
-    sha256 arm64_linux:   "a9091dc165ed17e69952976e3990b9027122ab1bde2d54b6aac42d1bacd3717f"
-    sha256 x86_64_linux:  "558b2a64792d33ea76537a2dca64927d15b91ebd0f13e07e776b01ac8acb8495"
+    root_url "https://github.com/z-aki/homebrew-tap/releases/download/v1/"
+    rebuild 1
+    sha256 arm64_tahoe: "b1865ee616f113e7aa7157d5ced21c6ce996d69ad39bf31dd9ac5dc62499f223"
   end
 
   head do
