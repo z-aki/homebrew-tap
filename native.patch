@@ -1,0 +1,41 @@
+--- Formula/emacs1.rb
++++ Formula/emacs.rb
+@@ -24,10 +24,12 @@
+     depends_on "gnu-sed" => :build
+   end
+ 
++  depends_on "gcc" => :build
+   depends_on "pkgconf" => :build
+   depends_on "texinfo" => :build
+   depends_on "gmp"
+   depends_on "gnutls"
++  depends_on "libgccjit"
+   depends_on "tree-sitter@0.25"
+ 
+   uses_from_macos "libxml2"
+@@ -43,6 +45,8 @@
+   conflicts_with cask: "emacs-app@pretest"
+ 
+   def install
++    gcc_lib="#{HOMEBREW_PREFIX}/lib/gcc/current"
++    ENV.append "LDFLAGS", "-L#{gcc_lib}"
+     args = %W[
+       --disable-acl
+       --disable-silent-rules
+@@ -58,6 +62,7 @@
+       --without-imagemagick
+       --without-selinux
+       --with-tree-sitter
++      --with-native-comp
+     ]
+ 
+     if build.head?
+@@ -74,7 +79,7 @@
+     EOS
+ 
+     system "./configure", *args
+-    system "make"
++    system "make", "NATIVE_FULL_AOT=1"
+     system "make", "install"
+ 
+     # Follow MacPorts and don't install ctags from Emacs. This allows Vim
