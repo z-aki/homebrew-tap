@@ -9,79 +9,78 @@ jobs:
   test-bot:
     strategy:
       matrix:
-        os: [ macos-26 ]
+        # One runner for Darwin 24 (Sequoia), one for Darwin 26 (Tahoe)
+        os: [macos-15, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout your tap
+      - name: test-bot Checkout your tap
         uses: actions/checkout@v4
         with:
           repository: z-aki/homebrew-tap
           token: ${{ github.token }}
 
-      - name: Fetch and Patch
+      - name: test-bot Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: test-bot Fetch and Patch
         run: |
           mkdir -p Formula
-          rm -f Formula/emacs.rb || true
           curl -L https://github.com/Homebrew/homebrew-core/raw/refs/heads/main/Formula/e/emacs.rb -o Formula/emacs.rb
           patch Formula/emacs.rb native.patch
 
-          git config user.name "z-aki"
-          git config user.email "39851968+z-aki@users.noreply.github.com"
-          git add Formula/emacs.rb
-          git commit -m "Update emacs.rb " || exit 0
-          git push origin main
-
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@main
-        with:
-          token: ${{ github.token }}
-
-      - name: Cache Homebrew Bundler RubyGems
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ matrix.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ matrix.os }}-rubygems-
-
-
-      - name: Set variables for bottle and tag
-        id: vars
+      - name: test-bot Build Bottle
         run: |
-          set -x;
-          git config user.name "z-aki"
-          git config user.email "39851968+z-aki@users.noreply.github.com"
-          git pull origin main
           latest_tag=$(git tag --list 'v*' | sort -V | tail -n1)
-          if [[ -z "$latest_tag" ]]; then
-            next_tag="v1"
-          else
-            next_num=$(( ${latest_tag#v} + 1 ))
-            next_tag="v$next_num"
+          if [[ -z "$latest_tag" ]]; then next_tag="v1"; else
+            next_num=$(( ${latest_tag#v} + 1 )); next_tag="v$next_num";
           fi
           echo "next_tag=$next_tag" >> "$GITHUB_OUTPUT"
-          brew install jq
 
+          # This merge combines Sequoia and Tahoe hashes into the same file
           root_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$next_tag/"
           brew install --build-bottle z-aki/tap/emacs
           brew bottle --root-url "$root_url" --json z-aki/tap/emacs
-          brew bottle --merge --write ./emacs*.json || true
+
+      - name: test-bot Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bottles-${{ matrix.os }}
+          path: |
+            *.bottle.json
+            *.bottle*.tar.gz
+            Formula/emacs.rb
+
+  publish:
+    needs: test-bot
+    runs-on: macos-15
+    steps:
+      - name: Checkout your tap
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Download all bottles
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bottles-*
+          merge-multiple: true
+
+      - name: Merge Bottles and Push
+        id: vars
+        run: |
+          git config user.name "z-aki"
+          git config user.email "39851968+z-aki@users.noreply.github.com"
           
-          new_bottle_name=$(jq -r '.[].bottle.tags.arm64_tahoe.filename' ./*.bottle.json)
-          old_bottle_name=( *.bottle*.tar.gz )
-          mv "${old_bottle_name[0]}" "$new_bottle_name"
-
+          brew bottle --merge --write ./emacs*.json || true
           git tag "$next_tag"
-          git push origin "$next_tag"
+          git push origin main --tags
 
-          git push origin main
-          cat ./*emacs*.json
-          ls -la .
-
-      - name: Publish GitHub Release and Upload Bottles
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ steps.vars.outputs.next_tag }}
           name: ${{ steps.vars.outputs.next_tag }}
