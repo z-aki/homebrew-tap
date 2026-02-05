@@ -18,7 +18,7 @@ jobs:
       - name: test-bot Checkout your tap
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
 
       - name: test-bot Set up Homebrew
         id: set-up-homebrew
@@ -60,8 +60,8 @@ jobs:
       - name: Checkout your tap
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
+          repository: z-aki/homebrew-tap
+          token: ${{ github.token }}
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@main
 
@@ -73,15 +73,21 @@ jobs:
 
       - name: Merge Bottles and Push
         run: |
-          git config user.name "z-aki"
-          git config user.email "39851968+z-aki@users.noreply.github.com"
+          set -x;
+          git config set user.name "z-aki"
+          git config set user.email "39851968+z-aki@users.noreply.github.com"
           
-          brew bottle --merge --write ./emacs*.json || true
+          brew bottle -d -v --merge --write ./emacs*.json || true
+
+          git remote set-url "origin" https://z-aki:${{ github.token }}@github.com/z-aki/homebrew-tap
+          git pull origin main --tags
           git tag "${{ needs.test-bot.outputs.next_tag }}"
           git push origin main --tags
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: ${{ needs.test-bot.outputs.next_tag }}
           name: ${{ needs.test-bot.outputs.next_tag }}
