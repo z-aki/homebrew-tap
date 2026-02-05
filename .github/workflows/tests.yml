@@ -44,6 +44,9 @@ jobs:
           brew install --build-bottle z-aki/tap/emacs
           brew bottle --root-url "$root_url" --json z-aki/tap/emacs
 
+          new_bottle_name=$(jq -r '.[].bottle.tags | to_entries[0].value.filename' ./*.bottle.json)
+          mv ./*.bottle*.tar.gz "$new_bottle_name"
+
       - name: test-bot Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
