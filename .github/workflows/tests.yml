@@ -12,12 +12,13 @@ jobs:
         # One runner for Darwin 24 (Sequoia), one for Darwin 26 (Tahoe)
         os: [macos-15, macos-26]
     runs-on: ${{ matrix.os }}
+    outputs:
+      next_tag: ${{ steps.build.outputs.next_tag }}
     steps:
       - name: test-bot Checkout your tap
         uses: actions/checkout@v4
         with:
-          repository: z-aki/homebrew-tap
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: test-bot Set up Homebrew
         id: set-up-homebrew
@@ -30,6 +31,7 @@ jobs:
           patch Formula/emacs.rb native.patch
 
       - name: test-bot Build Bottle
+        id: build
         run: |
           latest_tag=$(git tag --list 'v*' | sort -V | tail -n1)
           if [[ -z "$latest_tag" ]]; then next_tag="v1"; else
@@ -70,21 +72,20 @@ jobs:
           merge-multiple: true
 
       - name: Merge Bottles and Push
-        id: vars
         run: |
           git config user.name "z-aki"
           git config user.email "39851968+z-aki@users.noreply.github.com"
           
           brew bottle --merge --write ./emacs*.json || true
-          git tag "$next_tag"
+          git tag "${{ needs.test-bot.outputs.next_tag }}"
           git push origin main --tags
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.vars.outputs.next_tag }}
-          name: ${{ steps.vars.outputs.next_tag }}
-          body: "Release ${{ steps.vars.outputs.next_tag }}"
+          tag_name: ${{ needs.test-bot.outputs.next_tag }}
+          name: ${{ needs.test-bot.outputs.next_tag }}
+          body: "Release ${{ needs.test-bot.outputs.next_tag }}"
           files: |
             *.bottle*.tar.gz
             *.bottle.json
