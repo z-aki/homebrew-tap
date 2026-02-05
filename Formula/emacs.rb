@@ -10,9 +10,9 @@ class Emacs < Formula
 
   bottle do
     root_url "https://github.com/z-aki/homebrew-tap/releases/download/v2/"
-    rebuild 2
-    sha256 arm64_tahoe:   "2b52cfbefd013562bbcd8dccff5ff299ac6b8c6258eda79c3647c75b82536d4d"
-    sha256 arm64_sequoia: "1528137faaadf7a06d93d22ea18ccba86f12d2fe907e9124dbb3c71bc0e17636"
+    rebuild 3
+    sha256 arm64_tahoe:   "de0b1c41a44342ae7cee6f267eebb538483f5197b4a61bf9fb1e1483394e9bc8"
+    sha256 arm64_sequoia: "0dc77243cb0c94012d5530d4dbf54604871b170f411d046004f73d3996e02045"
   end
 
   head do
