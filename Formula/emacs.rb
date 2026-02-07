@@ -22,9 +22,9 @@ class Emacs < Formula
     depends_on "gnu-sed" => :build
   end
 
-  depends_on "gcc" => :build
   depends_on "pkgconf" => :build
   depends_on "texinfo" => :build
+  depends_on "gcc"
   depends_on "gmp"
   depends_on "gnutls"
   depends_on "libgccjit"
