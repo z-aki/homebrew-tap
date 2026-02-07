@@ -9,10 +9,10 @@ class Emacs < Formula
   revision 2
 
   bottle do
-    root_url "https://github.com/z-aki/homebrew-tap/releases/download/v2/"
-    rebuild 3
-    sha256 arm64_tahoe:   "de0b1c41a44342ae7cee6f267eebb538483f5197b4a61bf9fb1e1483394e9bc8"
-    sha256 arm64_sequoia: "0dc77243cb0c94012d5530d4dbf54604871b170f411d046004f73d3996e02045"
+    root_url "https://github.com/z-aki/homebrew-tap/releases/download/v3/"
+    rebuild 4
+    sha256 arm64_tahoe:   "b7bcab2da2576e26bb6acc236a742be997108c2f44a5522f111e033616e9710c"
+    sha256 arm64_sequoia: "9cb35edcd3c837315025f7749ebc81139d14ca41fa7215f2265f7b278d9a3f7a"
   end
 
   head do
@@ -24,9 +24,9 @@ class Emacs < Formula
 
   depends_on "pkgconf" => :build
   depends_on "texinfo" => :build
-  depends_on "gcc"
   depends_on "gmp"
   depends_on "gnutls"
+  depends_on "gcc"
   depends_on "libgccjit"
   depends_on "tree-sitter@0.25"
 
